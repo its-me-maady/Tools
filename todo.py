@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import sys
+import argparse, argcomplete
 import json
 
 FILE = os.path.expanduser(os.path.join("~", ".config", "todo", "todo.json"))
@@ -28,10 +28,10 @@ def add(content):
 
 def view():
     tasks = load()
-    print("Your tasks are\n <id> | <completed> | <name> ")
+    print("Your tasks are\n\n <id> | <completed> | <name> ")
     for i, task in enumerate(tasks, 1):
         status = " " if tasks[task] else "✗"
-        print(f" {i} | {status} | {task} ")
+        print(f"    {i} | {status.center(11," ")} | {task} ")
 
 
 def delete(id):
@@ -56,38 +56,60 @@ def modify(id, task):
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.expanduser("~/.config/todo/"),exist_ok=True)
-    cmd = sys.argv[1:]
-    print("\n")
+    os.makedirs(os.path.expanduser("~/.config/todo/"), exist_ok=True)
 
-    if "add" in cmd:
-        add(cmd[1])
+    parser = argparse.ArgumentParser(
+        prog="todo",
+        description="A File based quick CLI Tool",
+        epilog="Thanks for using :)",
+    )
+
+    # Create subparsers for commands
+    subparsers = parser.add_subparsers(dest="command")
+
+    # add command
+    add_parser = subparsers.add_parser("add", help="Create a new task")
+    add_parser.add_argument("task", help="Task name")
+
+    # ls command
+    subparsers.add_parser("ls", help="List all tasks")
+
+    # del command
+    del_parser = subparsers.add_parser("del", help="Delete a task")
+    del_parser.add_argument("id", help="Task ID")
+
+    # stat command
+    stat_parser = subparsers.add_parser("stat", help="Toggle task status")
+    stat_parser.add_argument("id", help="Task ID")
+
+    # mod command
+    mod_parser = subparsers.add_parser("mod", help="Rename a task")
+    mod_parser.add_argument("id", help="Task ID")
+    mod_parser.add_argument("name", help="New task name")
+
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+
+    # Handle commands
+    if args.command == "add":
+        add(args.task)
         view()
 
-    elif "ls" in cmd:
+    elif args.command == "ls":
         view()
 
-    elif "del" in cmd:
-        delete(cmd[1])
-        print("Deleted successfully !")
+    elif args.command == "del":
+        delete(args.id)
+        print("Deleted successfully!")
         view()
 
-    elif "stat" in cmd:
-        status(cmd[1])
+    elif args.command == "stat":
+        status(args.id)
         view()
 
-    elif "mod" in cmd:
-        modify(*cmd[1:])
+    elif args.command == "mod":
+        modify(args.id, args.name)
         view()
 
     else:
-        print(""" Todo <cmd> <option> 
-
-                         cmd 
-        --------------------------------------------
-        ls - Lists all tasks.
-        add <task name> - Create a <task name> task.
-        del <id> - Delete task with <id>
-        mod <id> <name> - Renames a task
-        stat <id> - toggle a task status
-        help - Prints this message""")
+        parser.print_help()

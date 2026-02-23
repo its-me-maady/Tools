@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
 import re
-import sys
+import argparse
 import unittest
+import sys
+import argcomplete
 
 
 def header(content):
     if content.startswith("###"):
         content = f"<h3>{content[3:]}</h3>"
-    if content.startswith("##"):
+    elif content.startswith("##"):
         content = f"<h2>{content[2:]}</h2>"
-    if content.startswith("#"):
+    elif content.startswith("#"):
         content = f"<h1>{content[1:]}</h1>"
     return content
 
@@ -22,8 +24,7 @@ def ls(content):
 
 
 def para(content):
-    content = f"<p>{content}</p>"
-    return content
+    return f"<p>{content}</p>"
 
 
 def typo(data):
@@ -35,42 +36,63 @@ def typo(data):
 
 def parse(file):
     if not file.endswith(".md"):
-        raise Exception("Input a valid file format given is not in .md format")
+        raise Exception("Input file must be in .md format")
 
     with open(file, "r") as f:
         content = f.readlines()
         data = []
+
         for i in content:
             i = i.strip()
-            if i:  # Only process non-empty lines
-                if "#" == i[0]:
-                    i = typo(i)
+            if i:
+                i = typo(i)
+
+                if i.startswith("#"):
                     data.append(header(i))
-                elif "-" == i[0]:
-                    i = typo(i)
+                elif i.startswith("-"):
                     data.append(ls(i))
                 else:
-                    i = typo(i)
                     data.append(para(i))
+
         return data
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("md2html <input_markdown_file>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        prog="md2html",
+        description="Simple Markdown to HTML converter",
+        epilog="Thanks for using md2html :)",
+    )
 
-    input_file = sys.argv[1]
-    if ".md" in input_file:
-        try:
-            parsed_data = parse(input_file)
-            with open("parsed.html", "w") as f:
-                f.write("".join(parsed_data))
-            print("Successfully created parsed.html")
-        except Exception as e:
-            print(f"Error: {e}")
-    else:
+    parser.add_argument("input_file", nargs="?", help="Input markdown (.md) file")
+
+    parser.add_argument("--test", action="store_true", help="Run unit tests")
+
+    argcomplete.autocomplete(parser)
+    args = parser.parse_args()
+
+    # Run tests if --test is provided
+    if args.test:
+        unittest.main(argv=[sys.argv[0]])
+        return
+
+    # If no file provided
+    if not args.input_file:
+        parser.print_help()
+        return
+
+    # Validate extension
+    if not args.input_file.endswith(".md"):
         print("Please provide a markdown (.md) file")
+        return
+
+    try:
+        parsed_data = parse(args.input_file)
+        with open("parsed.html", "w") as f:
+            f.write("".join(parsed_data))
+        print("Successfully created parsed.html")
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 class TestMarkdownParser(unittest.TestCase):
@@ -100,7 +122,4 @@ class TestMarkdownParser(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--test":
-        unittest.main(argv=[""])
-    else:
-        main()
+    main()
