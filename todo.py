@@ -31,7 +31,7 @@ def view():
     print("Your tasks are\n\n <id> | <completed> | <name> ")
     for i, task in enumerate(tasks, 1):
         status = " " if tasks[task] else "✗"
-        print(f"    {i} | {status.center(11," ")} | {task} ")
+        print(f"    {i} | {status.center(11, ' ')} | {task} ")
 
 
 def delete(id):

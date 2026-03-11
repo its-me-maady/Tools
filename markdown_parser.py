@@ -9,22 +9,28 @@ import argcomplete
 
 def header(content):
     if content.startswith("###"):
-        content = f"<h3>{content[3:]}</h3>"
+        content = f"<h3>{content[3:]}</h3>\n"
     elif content.startswith("##"):
-        content = f"<h2>{content[2:]}</h2>"
+        content = f"<h2>{content[2:]}</h2>\n"
     elif content.startswith("#"):
-        content = f"<h1>{content[1:]}</h1>"
+        content = f"<h1>{content[1:]}</h1>\n"
+    return content
+
+
+def br(content):
+    if content.startswith("--"):
+        content = f"<li>{content[1:]}</li>\n"
     return content
 
 
 def ls(content):
     if content.startswith("-"):
-        content = f"<li>{content[1:]}</li>"
+        content = f"<li>{content[1:]}</li>\n"
     return content
 
 
 def para(content):
-    return f"<p>{content}</p>"
+    return f"<p>{content}</p>\n"
 
 
 def typo(data):
@@ -37,11 +43,9 @@ def typo(data):
 def parse(file):
     if not file.endswith(".md"):
         raise Exception("Input file must be in .md format")
-
     with open(file, "r") as f:
         content = f.readlines()
         data = []
-
         for i in content:
             i = i.strip()
             if i:
@@ -49,6 +53,8 @@ def parse(file):
 
                 if i.startswith("#"):
                     data.append(header(i))
+                elif i.startswith("--"):
+                    data.append(br(i))
                 elif i.startswith("-"):
                     data.append(ls(i))
                 else:
