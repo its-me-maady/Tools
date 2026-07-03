@@ -19,7 +19,7 @@ def header(content):
 
 def br(content):
     if content.startswith("--"):
-        content = f"<li>{content[1:]}</li>\n"
+        content = "<br>"
     return content
 
 
